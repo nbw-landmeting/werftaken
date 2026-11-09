@@ -141,6 +141,32 @@ details[open] summary{margin-bottom:10px}
 .mic.on svg{color:var(--accent-fg);animation:puls 1.2s ease-in-out infinite}
 @keyframes puls{50%{transform:scale(1.18)}}
 .mic:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.datebtn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;font:inherit;font-size:16px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;text-align:left}
+.datebtn.leeg{color:var(--muted)}
+.datebtn svg{width:20px;height:20px;flex:none}
+.datebtn:focus-visible,.datebtn[aria-expanded="true"]{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.kal{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--surface);gap:8px}
+.kal-kop{display:flex;align-items:center;justify-content:space-between;font-family:var(--f-display);font-weight:700;font-size:1.05rem;text-transform:capitalize}
+.kal-nav{font:inherit;font-size:1.5rem;line-height:1;width:40px;height:40px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
+.kal-raster{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.kal-dagnamen span{text-align:center;font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kal-dag{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:46px;border:1px solid transparent;border-radius:8px;background:none;color:var(--fg);font:inherit;font-variant-numeric:tabular-nums;cursor:pointer;padding:0}
+.kal-dag:hover{background:var(--bg)}
+.kal-dag.ander{color:var(--muted);opacity:.55}
+.kal-dag.vandaag{border-color:var(--accent)}
+.kal-dag.gekozen{background:var(--accent);color:var(--accent-fg)}
+.kal-dag:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.dots{display:flex;gap:3px;height:6px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--pc)}
+.kal-dag.gekozen .dots i{background:var(--accent-fg)}
+.kal-lijst{font-size:.88rem;border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:4px}
+.kal-lijst b{font-weight:600}
+.kal-lijst div{display:flex;gap:8px;align-items:baseline;min-width:0}
+.kal-lijst div span{min-width:0;word-break:break-word}
+.kal-lijst .u{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);flex:none;width:3.2em}
+.kal-lijst .pb{width:8px;height:8px;border-radius:2px;background:var(--pc);flex:none;align-self:center}
+.kal-voet{display:flex;align-items:center;gap:16px;justify-content:flex-end;flex-wrap:wrap}
+.kal-voet .linkbtn:first-child{margin-right:auto}
 .row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .btn.small{width:auto;padding:10px 16px;font-size:.95rem}
 </style>
@@ -201,12 +227,28 @@ details[open] summary{margin-bottom:10px}
         <input id="aanvrager" type="text" autocomplete="off" placeholder="Brecht">
       </div>
       <div class="field">
-        <label class="lbl" for="datum">Datum</label>
-        <input id="datum" type="date">
+        <label class="lbl" for="datumknop">Datum</label>
+        <button id="datumknop" class="datebtn" type="button" aria-expanded="false" aria-controls="kal"><span id="datumtxt">dd/mm/jjjj</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>
+        <input id="datum" type="hidden">
       </div>
       <div class="field">
         <label class="lbl" for="uur">Uur</label>
         <input id="uur" type="time">
+      </div>
+      <div id="kal" class="kal field full" hidden>
+        <div class="kal-kop">
+          <button id="kal-vorige" class="kal-nav" type="button" aria-label="Vorige maand">&#8249;</button>
+          <span id="kal-maand"></span>
+          <button id="kal-volgende" class="kal-nav" type="button" aria-label="Volgende maand">&#8250;</button>
+        </div>
+        <div class="kal-raster kal-dagnamen" aria-hidden="true"><span>ma</span><span>di</span><span>wo</span><span>do</span><span>vr</span><span>za</span><span>zo</span></div>
+        <div id="kal-dagen" class="kal-raster" role="grid"></div>
+        <div id="kal-lijst" class="kal-lijst"></div>
+        <div class="kal-voet">
+          <button id="kal-wis" class="linkbtn" type="button">Wissen</button>
+          <button id="kal-vandaag" class="linkbtn" type="button">Vandaag</button>
+          <button id="kal-klaar" class="btn small" type="button">Klaar</button>
+        </div>
       </div>
       <div class="field full">
         <span class="lbl" id="l-prio">Prioriteit</span>
@@ -243,7 +285,7 @@ details[open] summary{margin-bottom:10px}
         <tr><td>Taak in …</td><td>Werf. Wordt gekoppeld aan het best passende bestaande label.</td></tr>
         <tr><td>, …</td><td>Wat er moet gebeuren. Komt na het streepje in de titel.</td></tr>
         <tr><td>voor X</td><td>Uitvoerder. Komt na de taak in de titel en kan je ook apart kiezen.</td></tr>
-        <tr><td>op 9 november</td><td>Ook: 9/11, morgen, overmorgen, vrijdag, volgende maandag.</td></tr>
+        <tr><td>op 9 november</td><td>Ook: 9/11, morgen, overmorgen, vrijdag, volgende maandag. In de kalender tonen stippen hoeveel taken er die dag al gepland staan.</td></tr>
         <tr><td>om 7 uur</td><td>Ook: 7u30, 13:15, half 8.</td></tr>
         <tr><td>met P1</td><td>P1 tot P4. Zonder vermelding: P1.</td></tr>
         <tr><td>gevraagd door X</td><td>Komt tussen haakjes achteraan in de titel.</td></tr>
@@ -590,7 +632,7 @@ function reparse(){
   selLabel=r.werfLabel||""; selNew=false; wIn.value=selLabel; wClear.hidden=!selLabel;
   setMatch(r.werfLabel,r.werfScore);
   $("taak").value=r.taak; $("uitvoerder").value=r.uitvoerder; syncChips(); $("aanvrager").value=r.aanvrager;
-  $("datum").value=r.datum; $("uur").value=r.uur;
+  setDatum(r.datum); $("uur").value=r.uur;
   $("p"+r.prioriteit).checked=true;
   setStatus(null);
   updatePreview();
@@ -615,7 +657,7 @@ function updatePreview(){
 
 let deb=null;
 $("dictaat").addEventListener("input",()=>{ clearTimeout(deb); deb=setTimeout(reparse,250); });
-["taak","aanvrager","datum","uur"].forEach(id=>$(id).addEventListener("input",updatePreview));
+["taak","aanvrager","uur"].forEach(id=>$(id).addEventListener("input",updatePreview));
 // Uitvoerder: vaste namen als knoppen, of zelf typen
 function syncChips(){ const v=$("uitvoerder").value.trim().toLowerCase();
   document.querySelectorAll("#chips .chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.naam.toLowerCase()===v?"true":"false")); }
@@ -645,7 +687,7 @@ $("add").addEventListener("click",async()=>{
     setStatus("ok","Toegevoegd: "+(t.content||titel));
     pushRecent({titel:t.content||titel,p:prio(),datum:fmtDatum($("datum").value,$("uur").value),door:(lsGet(WKEY)||"").split(" ")[0],toegevoegd:fmtStamp(new Date().toISOString())});
     setTimeout(loadRecent,1500);
-    $("dictaat").value=""; ["taak","uitvoerder","aanvrager","datum","uur"].forEach(id=>$(id).value=""); syncChips();
+    $("dictaat").value=""; ["taak","uitvoerder","aanvrager","uur"].forEach(id=>$(id).value=""); setDatum(""); syncChips();
     $("p1").checked=true; selLabel=""; selNew=false; wIn.value=""; wClear.hidden=true; lastParse=null; setMatch(null);
   }catch(e){ setStatus(e.kind==="network"||e.kind==="server"?"warn":"err", errText(e,"de taak")); }
   finally{ busy=false; $("add").textContent="Toevoegen aan Todoist"; updatePreview(); }
@@ -689,6 +731,76 @@ $("save").addEventListener("click",async()=>{
 $("logout").addEventListener("click",()=>{ lsSet(TKEY,null); lsSet(WKEY,null); lsSet(LKEY,null); lsSet(RKEY,null); lsSet(UKEY,null); COLLAB=null; renderRecent([]); LABELS=[]; $("token").value=""; showWho(""); setMatch(null); updatePreview();
   const m=$("setmsg"); m.hidden=false; m.className="msg info"; m.textContent="Token gewist op dit toestel."; });
 
+// ---- Kalender met stippen voor geplande taken (NORRÉ - PROJECTEN) ----
+const DKEY="nbw-werftaken-due";
+let DUEMAP={}; try{ DUEMAP=JSON.parse(lsGet(DKEY)||"{}")||{}; }catch(e){ DUEMAP={}; }
+const MAANDNAMEN=["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
+const DAGNAMEN=["zo","ma","di","wo","do","vr","za"];
+let kalJaar, kalMaand;
+function isoDag(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+function dueKey(due){
+  if(!due) return null; const s=due.datetime||due.date||""; if(!s) return null;
+  if(s.length<=10) return {k:s,u:""};
+  const dt=/Z$|[+-]\d\d:?\d\d$/.test(s)? new Date(s) : new Date(s.replace(" ","T"));
+  if(isNaN(dt)) return {k:s.slice(0,10),u:""};
+  return {k:isoDag(dt),u:pad2(dt.getHours())+":"+pad2(dt.getMinutes())};
+}
+function bouwDueMap(tasks){
+  const m={};
+  tasks.forEach(t=>{ if(!t||t.parent_id) return; const d=dueKey(t.due); if(!d) return;
+    (m[d.k]=m[d.k]||[]).push({t:t.content,p:Math.min(4,Math.max(1,5-(t.priority||1))),u:d.u}); });
+  Object.values(m).forEach(l=>l.sort((a,b)=>(a.u||"99").localeCompare(b.u||"99")||a.p-b.p));
+  DUEMAP=m; lsSet(DKEY,JSON.stringify(m)); if(!$("kal").hidden) tekenKal();
+}
+function setDatum(v){
+  $("datum").value=v||"";
+  const t=$("datumtxt"), b=$("datumknop");
+  if(v){ const [y,m,d]=v.split("-"); const dt=new Date(+y,+m-1,+d); t.textContent=DAGNAMEN[dt.getDay()]+" "+pad2(+d)+"/"+pad2(+m)+"/"+y; b.classList.remove("leeg"); }
+  else { t.textContent="dd/mm/jjjj"; b.classList.add("leeg"); }
+  if(!$("kal").hidden) tekenKal();
+  updatePreview();
+}
+function openKal(toon){
+  $("kal").hidden=!toon; $("datumknop").setAttribute("aria-expanded",toon?"true":"false");
+  if(toon){ const v=$("datum").value; const b=v? new Date(v+"T12:00:00") : new Date(); kalJaar=b.getFullYear(); kalMaand=b.getMonth(); tekenKal(); }
+}
+function tekenKal(){
+  $("kal-maand").textContent=MAANDNAMEN[kalMaand]+" "+kalJaar;
+  const box=$("kal-dagen"); box.innerHTML="";
+  const eerste=new Date(kalJaar,kalMaand,1); const offset=(eerste.getDay()+6)%7;
+  const start=new Date(kalJaar,kalMaand,1-offset); const vandaag=isoDag(new Date()); const gekozen=$("datum").value;
+  for(let i=0;i<42;i++){
+    const d=new Date(start); d.setDate(start.getDate()+i); const k=isoDag(d); const taken=DUEMAP[k]||[];
+    const b=document.createElement("button"); b.type="button"; b.className="kal-dag";
+    if(d.getMonth()!==kalMaand) b.classList.add("ander"); if(k===vandaag) b.classList.add("vandaag"); if(k===gekozen) b.classList.add("gekozen");
+    b.setAttribute("aria-label",d.getDate()+" "+MAANDNAMEN[d.getMonth()]+(taken.length?", "+taken.length+" taken":""));
+    const n=document.createElement("span"); n.textContent=d.getDate(); b.appendChild(n);
+    const dots=document.createElement("span"); dots.className="dots";
+    [...taken].sort((a,b)=>a.p-b.p).slice(0,3).forEach(x=>{ const i=document.createElement("i"); i.style.setProperty("--pc","var(--p"+x.p+")"); dots.appendChild(i); });
+    b.appendChild(dots);
+    b.addEventListener("click",()=>{ setDatum(k); if(d.getMonth()!==kalMaand){ kalMaand=d.getMonth(); kalJaar=d.getFullYear(); tekenKal(); } });
+    box.appendChild(b);
+  }
+  tekenLijst();
+}
+function tekenLijst(){
+  const l=$("kal-lijst"); l.innerHTML=""; const k=$("datum").value;
+  if(!k){ l.textContent="Kies een dag om te zien wat er al gepland staat."; return; }
+  const [y,m,d]=k.split("-"); const taken=DUEMAP[k]||[];
+  const kop=document.createElement("b"); kop.textContent=(taken.length? taken.length+(taken.length===1?" taak":" taken") : "Nog geen taken")+" op "+(+d)+"/"+(+m); l.appendChild(kop);
+  taken.slice(0,8).forEach(x=>{ const r=document.createElement("div");
+    const p=document.createElement("span"); p.className="pb"; p.style.setProperty("--pc","var(--p"+x.p+")");
+    const u=document.createElement("span"); u.className="u"; u.textContent=x.u||"";
+    const t=document.createElement("span"); t.textContent=x.t; r.append(p,u,t); l.appendChild(r); });
+  if(taken.length>8){ const r=document.createElement("div"); r.textContent="+ "+(taken.length-8)+" andere"; l.appendChild(r); }
+}
+$("datumknop").addEventListener("click",()=>openKal($("kal").hidden));
+$("kal-vorige").addEventListener("click",()=>{ kalMaand--; if(kalMaand<0){kalMaand=11;kalJaar--;} tekenKal(); });
+$("kal-volgende").addEventListener("click",()=>{ kalMaand++; if(kalMaand>11){kalMaand=0;kalJaar++;} tekenKal(); });
+$("kal-wis").addEventListener("click",()=>setDatum(""));
+$("kal-vandaag").addEventListener("click",()=>{ const t=new Date(); kalJaar=t.getFullYear(); kalMaand=t.getMonth(); setDatum(isoDag(t)); tekenKal(); });
+$("kal-klaar").addEventListener("click",()=>{ openKal(false); $("datumknop").focus(); });
+
 // Recente taken: open taken uit NORRÉ - PROJECTEN, van alle toestellen en collega's
 const RKEY="nbw-werftaken-recent2", UKEY="nbw-werftaken-uid";
 let COLLAB=null, recentBusy=false, recentAt=0;
@@ -729,6 +841,7 @@ async function loadRecent(){
       (r.results||[]).forEach(t=>tasks.push(t));
       if(r.next_cursor) cursor=r.next_cursor; else break;
     }
+    bouwDueMap(tasks);
     if(!COLLAB){
       COLLAB={};
       try{ const c=await fetchAll("projects/"+PROJECT_ID+"/collaborators",x=>x); c.forEach(x=>{ if(x&&x.id) COLLAB[x.id]=(x.name||x.email||"").split(" ")[0]; }); }catch(e){}
@@ -745,6 +858,7 @@ async function loadRecent(){
 }
 $("recent-reload").addEventListener("click",loadRecent);
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && Date.now()-recentAt>60000) loadRecent(); });
+setDatum("");
 renderRecent();
 showWho(lsGet(WKEY)||"");
 (function(){ try{ const c=JSON.parse(lsGet(LKEY)||"null"); if(c&&c.names) useLabels(c.names); }catch(e){} })();
