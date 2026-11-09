@@ -79,7 +79,8 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
 .combo-list li small{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .combo-list li[aria-selected="true"],.combo-list li:hover{background:var(--accent-soft)}
 .combo-list li mark{background:none;color:var(--accent);font-weight:600}
-.combo-list li.new{border-top:1px solid var(--line);margin-top:4px;color:var(--accent);font-weight:600}
+.combo-list li.new{position:sticky;bottom:-4px;background:var(--surface);border-top:1px solid var(--line);border-radius:0 0 6px 6px;margin-top:4px;color:var(--accent);font-weight:600;box-shadow:0 -6px 10px -6px rgba(0,0,0,.15)}
+.combo-list li.new:hover,.combo-list li.new[aria-selected="true"]{background:var(--accent-soft)}
 .combo-list .none{color:var(--muted);cursor:default}
 .combo-list .none:hover{background:none}
 .match.bad{color:var(--err)} .match.bad .dot{background:var(--err)}
@@ -487,7 +488,7 @@ function suggest(txt){
   // eerst labels die de getypte tekst letterlijk bevatten, daarna de beste gelijkenissen
   const contains=LABELS.filter(l=>l.key.includes(k)).map(l=>({...l,score:1,_c:l.key.indexOf(k)})).sort((a,b)=>a._c-b._c||a.name.localeCompare(b.name,"nl"));
   const rest=rankLabels(txt,LABELS).filter(l=>!l.key.includes(k)&&l.score>=0.35);
-  return [...contains,...rest].slice(0,10);
+  return [...contains,...rest].slice(0,6);
 }
 function highlight(name,txt){
   const frag=document.createDocumentFragment();
