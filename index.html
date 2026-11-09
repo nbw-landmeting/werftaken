@@ -401,7 +401,6 @@ async function api(path,opt){
   if(opt.query){ const q=new URLSearchParams(); Object.entries(opt.query).forEach(([k,v])=>{ if(v!=null&&v!=="") q.set(k,v); }); const qs=q.toString(); if(qs) url+="?"+qs; }
   const headers={"Authorization":"Bearer "+tok};
   if(opt.body) headers["Content-Type"]="application/json";
-  if(opt.requestId) headers["X-Request-Id"]=opt.requestId;
   let r;
   try{ r=await fetch(url,{method:opt.method||"GET",headers,body:opt.body?JSON.stringify(opt.body):undefined}); }
   catch(e){ throw new ApiError(navigator.onLine===false?"offline":"network",0,String(e)); }
@@ -596,10 +595,9 @@ $("add").addEventListener("click",async()=>{
   const titel=maakTitel(werfNaam(label),taak,uitv,aanv);
   const body={content:titel,priority:5-prio(),labels:[label],project_id:PROJECT_ID};
   const due=dueString($("datum").value,$("uur").value); if(due){ body.due_string=due; body.due_lang="nl"; }
-  const rid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2));
   busy=true; updatePreview(); $("add").textContent="Bezig met toevoegen…"; setStatus(null);
   try{
-    const t=await api("tasks",{method:"POST",body,requestId:rid})||{};
+    const t=await api("tasks",{method:"POST",body})||{};
     setStatus("ok","Toegevoegd: "+(t.content||titel));
     pushRecent({titel:t.content||titel,p:prio(),datum:fmtDatum($("datum").value,$("uur").value)});
     $("dictaat").value=""; ["taak","uitvoerder","aanvrager","datum","uur"].forEach(id=>$(id).value=""); syncChips();
