@@ -1,6 +1,6 @@
 {
-  "name": "NBW Werftaken",
-  "short_name": "Werftaken",
+  "name": "NBW WerfTakenApp",
+  "short_name": "WerfTakenApp",
   "description": "Werftaken inspreken en toevoegen aan Todoist (NORRÉ - PROJECTEN).",
   "lang": "nl-BE",
   "start_url": "./",

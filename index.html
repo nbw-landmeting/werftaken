@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>NBW Werftaken</title>
+<title>NBW WerfTakenApp</title>
 <meta name="theme-color" content="#c94a12">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Werftaken">
+<meta name="apple-mobile-web-app-title" content="WerfTakenApp">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
@@ -48,6 +48,8 @@ body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16
 .stripe{height:6px;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px))) 0;
   background:repeating-linear-gradient(-45deg,var(--accent) 0 10px,var(--fg) 10px 20px);opacity:.9}
 header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:14px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand img{width:40px;height:40px;border-radius:9px;flex:none}
 h1{font-family:var(--f-display);font-weight:700;font-size:1.65rem;letter-spacing:.01em;margin:0;text-wrap:balance}
 .proj{font-size:.85rem;color:var(--muted)}
 .proj b{color:var(--fg);font-weight:600}
@@ -118,6 +120,7 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
 .recent li:first-child{border-top:0}
 .recent .pbar{width:4px;align-self:stretch;border-radius:2px;background:var(--pc);flex:none}
 .recent .t{flex:1;min-width:0;word-break:break-word}
+.recent .t small{display:block;color:var(--muted);font-size:.78rem;margin-top:2px}
 .recent .d{font-size:.8rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .empty-note{color:var(--muted);font-size:.9rem;margin:0}
 
@@ -147,7 +150,7 @@ details[open] summary{margin-bottom:10px}
 <div class="stripe" aria-hidden="true"></div>
 <div class="wrap">
   <header>
-    <h1>NBW Werftaken</h1>
+    <h1 class="brand"><img src="icon-192.png" alt="" width="40" height="40">NBW WerfTakenApp</h1>
     <button id="gear" class="iconbtn" type="button" aria-expanded="false" aria-controls="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span id="who">Niet ingesteld</span></button>
   </header>
 
@@ -224,9 +227,13 @@ details[open] summary{margin-bottom:10px}
   </section>
 
   <section class="card" aria-labelledby="l-recent">
-    <span class="lbl" id="l-recent">Laatst toegevoegd op dit toestel</span>
+    <div class="row" style="justify-content:space-between;gap:8px">
+      <span class="lbl" id="l-recent">Laatst toegevoegd (alle toestellen)</span>
+      <button id="recent-reload" class="linkbtn" type="button">Vernieuwen</button>
+    </div>
+    <span id="recent-state" class="hint" style="margin-top:-6px"></span>
     <ul id="recent" class="recent"></ul>
-    <p id="recent-empty" class="empty-note">Nog geen taken toegevoegd. Wat je hier toevoegt, verschijnt in deze lijst.</p>
+    <p id="recent-empty" class="empty-note">Nog geen open taken gevonden in NORRÉ - PROJECTEN.</p>
   </section>
 
   <section class="card">
@@ -466,7 +473,7 @@ async function loadLabels(){
 async function checkAccount(){
   try{
     const u=await api("user");
-    const naam=(u&&(u.full_name||u.email))||""; lsSet(WKEY,naam); showWho(naam);
+    const naam=(u&&(u.full_name||u.email))||""; lsSet(WKEY,naam); if(u&&u.id) lsSet(UKEY,String(u.id)); showWho(naam);
     await api("projects/"+PROJECT_ID);
     return true;
   }catch(e){ setConn("err",errText(e,e.kind==="noaccess"?"het project":"het aanmelden")); if(e.kind==="auth"||e.kind==="notoken") openSettings(true); return false; }
@@ -636,7 +643,8 @@ $("add").addEventListener("click",async()=>{
     }
     const t=await api("tasks",{method:"POST",body})||{};
     setStatus("ok","Toegevoegd: "+(t.content||titel));
-    pushRecent({titel:t.content||titel,p:prio(),datum:fmtDatum($("datum").value,$("uur").value)});
+    pushRecent({titel:t.content||titel,p:prio(),datum:fmtDatum($("datum").value,$("uur").value),door:(lsGet(WKEY)||"").split(" ")[0],toegevoegd:fmtStamp(new Date().toISOString())});
+    setTimeout(loadRecent,1500);
     $("dictaat").value=""; ["taak","uitvoerder","aanvrager","datum","uur"].forEach(id=>$(id).value=""); syncChips();
     $("p1").checked=true; selLabel=""; selNew=false; wIn.value=""; wClear.hidden=true; lastParse=null; setMatch(null);
   }catch(e){ setStatus(e.kind==="network"||e.kind==="server"?"warn":"err", errText(e,"de taak")); }
@@ -674,31 +682,75 @@ $("save").addEventListener("click",async()=>{
     lsSet(TKEY,tok); const naam=(u&&(u.full_name||u.email))||""; lsSet(WKEY,naam); showWho(naam);
     try{ await api("projects/"+PROJECT_ID); m.className="msg ok"; m.textContent="In orde. Aangemeld als "+(naam||"onbekend")+"."; setConn(null); setTimeout(()=>openSettings(false),1200); }
     catch(e){ m.className="msg warn"; m.textContent="Token werkt, maar: "+errText(e,"het project"); }
-    loadLabels(); updatePreview();
+    if(u&&u.id) lsSet(UKEY,String(u.id));
+    loadLabels(); loadRecent(); updatePreview();
   }catch(e){ m.className="msg err"; m.textContent=e.kind==="auth"?"Dit token wordt niet aanvaard door Todoist. Kopieer het opnieuw.":errText(e,"het testen van het token"); }
 });
-$("logout").addEventListener("click",()=>{ lsSet(TKEY,null); lsSet(WKEY,null); lsSet(LKEY,null); LABELS=[]; $("token").value=""; showWho(""); setMatch(null); updatePreview();
+$("logout").addEventListener("click",()=>{ lsSet(TKEY,null); lsSet(WKEY,null); lsSet(LKEY,null); lsSet(RKEY,null); lsSet(UKEY,null); COLLAB=null; renderRecent([]); LABELS=[]; $("token").value=""; showWho(""); setMatch(null); updatePreview();
   const m=$("setmsg"); m.hidden=false; m.className="msg info"; m.textContent="Token gewist op dit toestel."; });
 
-// Recente taken: enkel op dit toestel
-const RKEY="nbw-werftaken-recent";
-function getRecent(){ try{ return JSON.parse(localStorage.getItem(RKEY)||"[]"); }catch(e){ return []; } }
-function pushRecent(item){ const l=[item,...getRecent()].slice(0,8); try{ localStorage.setItem(RKEY,JSON.stringify(l)); }catch(e){} renderRecent(l); }
+// Recente taken: open taken uit NORRÉ - PROJECTEN, van alle toestellen en collega's
+const RKEY="nbw-werftaken-recent2", UKEY="nbw-werftaken-uid";
+let COLLAB=null, recentBusy=false, recentAt=0;
+function getRecent(){ try{ return JSON.parse(lsGet(RKEY)||"[]"); }catch(e){ return []; } }
+function pushRecent(item){ const l=[item,...getRecent()].slice(0,10); lsSet(RKEY,JSON.stringify(l)); renderRecent(l); }
+function pad2(n){ return String(n).padStart(2,"0"); }
+function fmtDue(due){
+  if(!due) return "geen datum";
+  const s=due.datetime||due.date||""; if(!s) return "geen datum";
+  if(s.length<=10){ const [y,m,d]=s.split("-"); return +d+"/"+(+m)+"/"+y; }
+  const dt=/Z$|[+-]\d\d:?\d\d$/.test(s)? new Date(s) : new Date(s.replace(" ","T"));
+  if(isNaN(dt)) return s;
+  return dt.getDate()+"/"+(dt.getMonth()+1)+"/"+dt.getFullYear()+" "+pad2(dt.getHours())+":"+pad2(dt.getMinutes());
+}
+function fmtStamp(s){
+  const dt=new Date(s); if(isNaN(dt)) return "";
+  const nu=new Date(); const zelfdeDag=dt.toDateString()===nu.toDateString();
+  return (zelfdeDag?"vandaag":dt.getDate()+"/"+(dt.getMonth()+1))+" "+pad2(dt.getHours())+":"+pad2(dt.getMinutes());
+}
 function renderRecent(l){
   l=l||getRecent(); const ul=$("recent"); ul.innerHTML="";
   $("recent-empty").hidden=l.length>0;
   l.forEach(it=>{ const li=document.createElement("li");
     const b=document.createElement("span"); b.className="pbar"; b.style.setProperty("--pc","var(--p"+it.p+")");
     const t=document.createElement("span"); t.className="t"; t.textContent=it.titel;
+    const sub=[it.door?"door "+it.door:"", it.toegevoegd?"toegevoegd "+it.toegevoegd:""].filter(Boolean).join(" · ");
+    if(sub){ const sm=document.createElement("small"); sm.textContent=sub; t.appendChild(sm); }
     const d=document.createElement("span"); d.className="d"; d.textContent=it.datum;
     li.append(b,t,d); ul.appendChild(li); });
 }
+async function loadRecent(){
+  if(!getToken()||recentBusy) return;
+  recentBusy=true; $("recent-state").textContent="Bezig met vernieuwen…";
+  try{
+    const tasks=[]; let cursor=null;
+    for(let i=0;i<10;i++){
+      const r=await api("tasks",{query:{project_id:PROJECT_ID,limit:200,cursor}})||{};
+      (r.results||[]).forEach(t=>tasks.push(t));
+      if(r.next_cursor) cursor=r.next_cursor; else break;
+    }
+    if(!COLLAB){
+      COLLAB={};
+      try{ const c=await fetchAll("projects/"+PROJECT_ID+"/collaborators",x=>x); c.forEach(x=>{ if(x&&x.id) COLLAB[x.id]=(x.name||x.email||"").split(" ")[0]; }); }catch(e){}
+      const uid=lsGet(UKEY), naam=lsGet(WKEY); if(uid&&naam&&!COLLAB[uid]) COLLAB[uid]=naam.split(" ")[0];
+    }
+    const list=tasks.filter(t=>t&&t.added_at&&!t.parent_id)
+      .sort((a,b)=>Date.parse(b.added_at)-Date.parse(a.added_at)).slice(0,10)
+      .map(t=>({titel:t.content,p:Math.min(4,Math.max(1,5-(t.priority||1))),datum:fmtDue(t.due),door:COLLAB[t.added_by_uid]||"",toegevoegd:fmtStamp(t.added_at)}));
+    lsSet(RKEY,JSON.stringify(list)); renderRecent(list); recentAt=Date.now();
+    const nu=new Date(); $("recent-state").textContent="Open taken, bijgewerkt om "+pad2(nu.getHours())+":"+pad2(nu.getMinutes());
+  }catch(e){
+    renderRecent(); $("recent-state").textContent="Niet bijgewerkt. "+errText(e,"het ophalen van de taken");
+  }finally{ recentBusy=false; }
+}
+$("recent-reload").addEventListener("click",loadRecent);
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && Date.now()-recentAt>60000) loadRecent(); });
 renderRecent();
 showWho(lsGet(WKEY)||"");
 (function(){ try{ const c=JSON.parse(lsGet(LKEY)||"null"); if(c&&c.names) useLabels(c.names); }catch(e){} })();
 updatePreview();
 if(!getToken()){ setConn("info","Welkom. Vul eenmalig je Todoist-token in om te starten."); openSettings(true); }
-else { setConn(null); checkAccount().then(ok=>{ if(ok) loadLabels(); }); }
+else { setConn(null); checkAccount().then(ok=>{ if(ok){ loadLabels(); loadRecent(); } }); }
 if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
 </script>
 </body>

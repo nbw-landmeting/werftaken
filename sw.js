@@ -1,5 +1,5 @@
-// NBW Werftaken - service worker: app-bestanden offline beschikbaar, Todoist altijd live.
-const CACHE = "werftaken-v2";
+// NBW WerfTakenApp - service worker: app-bestanden offline beschikbaar, Todoist altijd live.
+const CACHE = "werftaken-v3";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
@@ -13,7 +13,7 @@ self.addEventListener("fetch", e => {
   if (e.request.method !== "GET" || url.origin !== self.location.origin) return; // Todoist en fonts: niet cachen
   // eerst netwerk (zo komen updates meteen binnen), anders de bewaarde versie
   e.respondWith(
-    fetch(e.request).then(r => {
+    fetch(e.request, {cache: "no-cache"}).then(r => {
       const copy = r.clone();
       caches.open(CACHE).then(c => c.put(e.request, copy));
       return r;
