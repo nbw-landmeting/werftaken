@@ -81,6 +81,11 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
 .combo-list li mark{background:none;color:var(--accent);font-weight:600}
 .combo-list li.new{position:sticky;bottom:-4px;background:var(--surface);border-top:1px solid var(--line);border-radius:0 0 6px 6px;margin-top:4px;color:var(--accent);font-weight:600;box-shadow:0 -6px 10px -6px rgba(0,0,0,.15)}
 .combo-list li.new:hover,.combo-list li.new[aria-selected="true"]{background:var(--accent-soft)}
+.combo-list li.group{flex-wrap:wrap;align-items:center;cursor:default}
+.combo-list li.group:hover{background:var(--surface)}
+.pfx{display:flex;gap:6px;flex-wrap:wrap}
+.pfx button{font:inherit;font-family:var(--f-mono);font-size:.85rem;font-weight:500;border:1px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:999px;padding:6px 12px;cursor:pointer}
+.pfx button:hover{background:var(--accent);color:var(--accent-fg)}
 .combo-list .none{color:var(--muted);cursor:default}
 .combo-list .none:hover{background:none}
 .match.bad{color:var(--err)} .match.bad .dot{background:var(--err)}
@@ -236,7 +241,7 @@ details[open] summary{margin-bottom:10px}
         <tr><td>met P1</td><td>P1 tot P4. Zonder vermelding: P1.</td></tr>
         <tr><td>gevraagd door X</td><td>Komt tussen haakjes achteraan in de titel.</td></tr>
       </table>
-      <p class="hint" style="margin-top:10px">Je ziet je eigen labels en de labels die al op gedeelde taken staan. Staat de werf er nog niet bij, typ dan de naam en kies onderaan in de lijst "Nieuwe werf aanmaken". Het label krijgt automatisch NB_ ervoor. Is de werf twijfelachtig herkend, dan kleurt de aanduiding oranje. Typ dan zelf in het werfveld: de lijst toont meteen de bestaande labels die passen.</p>
+      <p class="hint" style="margin-top:10px">Je ziet je eigen labels en de labels die al op gedeelde taken staan. Staat de werf er nog niet bij, typ dan de naam en kies onderaan in de lijst "Nieuwe werf aanmaken". Kies daarbij NB_, PR_ of ASF_ als voorvoegsel. Is de werf twijfelachtig herkend, dan kleurt de aanduiding oranje. Typ dan zelf in het werfveld: de lijst toont meteen de bestaande labels die passen.</p>
       <p class="hint" style="margin-top:6px"><button id="reload" class="linkbtn" type="button">Labels opnieuw ophalen</button></p>
     </details>
   </section>
@@ -470,11 +475,12 @@ function showWho(n){ $("who").textContent= n? n : "Niet ingesteld"; }
 
 // ---- Werf-combobox: zelf typen of kiezen, enkel bestaande labels ----
 let selLabel="", selNew=false, comboItems=[], comboIdx=-1;
-function nieuwLabelNaam(txt){
+const PREFIXEN=["NB_","PR_","ASF_"];
+function nieuwLabelNaam(txt,prefix){
   let t=(txt||"").trim().replace(/\s+/g," ");
   if(!t) return "";
   if(/^[A-Za-z]{1,5}_/.test(t)) return t;
-  return "NB_"+t.charAt(0).toUpperCase()+t.slice(1);
+  return (prefix||"NB_")+t.charAt(0).toUpperCase()+t.slice(1);
 }
 const wIn=$("werf"), wList=$("werf-list"), wClear=$("werf-clear");
 
@@ -506,10 +512,21 @@ function openList(items){
   else if(!items.length && !wIn.value.trim()){ const li=document.createElement("li"); li.className="none"; li.textContent="Geen bestaand label gevonden."; wList.appendChild(li); }
   // nieuwe werf aanbieden als de getypte tekst geen bestaand label is
   const nieuw=nieuwLabelNaam(wIn.value);
-  if(LABELS.length && nieuw && !exactLabel(wIn.value) && !exactLabel(nieuw)){ items=[...items,{name:nieuw,isNew:true,score:null}]; comboItems=items; }
+  if(LABELS.length && nieuw && !exactLabel(wIn.value) && !exactLabel(nieuw)){
+    const eigenPrefix=/^[A-Za-z]{1,5}_/.test(wIn.value.trim());
+    items=[...items,{name:nieuw,isNew:true,group:!eigenPrefix,score:null}]; comboItems=items; }
   items.forEach((l,i)=>{
     const li=document.createElement("li"); li.id="werf-opt-"+i; li.setAttribute("role","option"); li.setAttribute("aria-selected","false");
     const s=document.createElement("span");
+    if(l.isNew && l.group){
+      li.className="new group"; s.textContent="+ Nieuwe werf aanmaken als";
+      const pf=document.createElement("span"); pf.className="pfx";
+      PREFIXEN.forEach(p=>{ const b=document.createElement("button"); b.type="button"; b.tabIndex=-1; b.textContent=p;
+        b.title=nieuwLabelNaam(wIn.value,p);
+        b.addEventListener("pointerdown",ev=>{ ev.preventDefault(); ev.stopPropagation(); chooseLabel(nieuwLabelNaam(wIn.value,p),1,true); });
+        pf.appendChild(b); });
+      li.appendChild(s); li.appendChild(pf); wList.appendChild(li); return;
+    }
     if(l.isNew){ li.className="new"; s.textContent="+ Nieuwe werf aanmaken: "+l.name; } else s.appendChild(highlight(l.name,wIn.value));
     li.appendChild(s);
     if(l.score!=null && l.score<1){ const sm=document.createElement("small"); sm.textContent=Math.round(l.score*100)+"%"; li.appendChild(sm); }
