@@ -1,0 +1,36 @@
+NBW Werftaken - installatie
+===========================
+
+Inhoud
+  index.html             de app
+  manifest.webmanifest   app-gegevens (naam, icoon, kleuren)
+  sw.js                  service worker (app opent ook bij slechte verbinding)
+  icon-192.png, icon-512.png, apple-touch-icon.png
+
+1. Project delen in Todoist (eenmalig, door Bart)
+   Deel NORRÉ - PROJECTEN met Andreas en Tumur (project > Delen).
+   Iedereen ziet dan dezelfde taken. De werflabels die al op taken in dit
+   project staan, worden zichtbaar voor de collega's. Een label voor een
+   nieuwe werf maakt Bart eerst zelf aan en gebruikt het op één taak.
+
+2. App online zetten (https verplicht)
+   Zet alle bestanden samen in één map op een webserver. Geen database of
+   server-side code nodig.
+   - NBW-webserver: bv. https://<server>/werftaken/
+   - of GitHub Pages: nieuwe repository, bestanden uploaden,
+     Settings > Pages > Deploy from branch (main, /root).
+
+3. Op elk toestel (Andreas, Tumur, Bart)
+   - Open de link.
+   - iPhone (Safari): Deel > Zet op beginscherm.
+     Android (Chrome): menu > App installeren / Toevoegen aan startscherm.
+     Laptop (Chrome/Edge): installatie-icoon in de adresbalk.
+   - Tik op je naam rechtsboven en plak je EIGEN Todoist API-token.
+     Todoist: Instellingen > Integraties > Ontwikkelaar > API-token kopiëren.
+   - Het token blijft alleen op dat toestel. Toestel kwijt of collega weg:
+     token vernieuwen in Todoist (zelfde plek), dan werkt het oude niet meer.
+
+Aanpassen
+  - Uitvoerders: in index.html, regel met  const UITVOERDERS=[...]
+  - Project: in index.html, regel met  const PROJECT_ID="..."
+  - Na een aanpassing in sw.js de naam "werftaken-v1" ophogen (v2, ...).

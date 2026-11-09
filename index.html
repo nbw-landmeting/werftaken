@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="nl-BE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NBW Werftaken</title>
+<meta name="theme-color" content="#c94a12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Werftaken">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+/* Layout: één smalle kolom, mobiel eerst. Werfbord-oranje als enige accent, asfaltgrijze neutralen. */
+:root{
+  --bg:#f3f3f1; --surface:#ffffff; --fg:#1c1f22; --muted:#5b6268; --line:#d8dbdd;
+  --accent:#c94a12; --accent-fg:#ffffff; --accent-soft:#fbe9df;
+  --ok:#2f7d4a; --ok-soft:#e3f2e8; --warn:#9a6200; --warn-soft:#fdf1d8; --err:#b3261e; --err-soft:#fbe4e2;
+  --p1:#d1453b; --p2:#eb8909; --p3:#246fe0; --p4:#7b828a;
+  --f-display:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141618; --surface:#1e2124; --fg:#eceef0; --muted:#9ba2a9; --line:#32373c;
+  --accent:#ff7b3a; --accent-fg:#1a0d05; --accent-soft:#3a2216;
+  --ok:#6cc58a; --ok-soft:#18301f; --warn:#f0b84d; --warn-soft:#3a2d12; --err:#ff8a80; --err-soft:#3d1a18;
+  --p1:#ff7066; --p2:#ffa733; --p3:#6aa2ff; --p4:#9ba2a9; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141618; --surface:#1e2124; --fg:#eceef0; --muted:#9ba2a9; --line:#32373c;
+  --accent:#ff7b3a; --accent-fg:#1a0d05; --accent-soft:#3a2216;
+  --ok:#6cc58a; --ok-soft:#18301f; --warn:#f0b84d; --warn-soft:#3a2d12; --err:#ff8a80; --err-soft:#3d1a18;
+  --p1:#ff7066; --p2:#ffa733; --p3:#6aa2ff; --p4:#9ba2a9; color-scheme:dark}
+
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.stripe{height:6px;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px))) 0;
+  background:repeating-linear-gradient(-45deg,var(--accent) 0 10px,var(--fg) 10px 20px);opacity:.9}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:14px}
+h1{font-family:var(--f-display);font-weight:700;font-size:1.65rem;letter-spacing:.01em;margin:0;text-wrap:balance}
+.proj{font-size:.85rem;color:var(--muted)}
+.proj b{color:var(--fg);font-weight:600}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px}
+.lbl{font-family:var(--f-display);font-weight:600;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+textarea,input,select{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%;box-sizing:border-box;min-width:0}
+textarea{min-height:96px;resize:vertical;line-height:1.4}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.hint{font-size:.85rem;color:var(--muted);margin:0}
+.hint code{font-family:var(--f-mono);font-size:.8rem;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field.full{grid-column:1/-1}
+@media (max-width:420px){.fields{grid-template-columns:1fr}}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:7px 14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.combo{position:relative}
+.combo input{padding-right:40px}
+.combo-x{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;background:none;color:var(--muted);font-size:1.3rem;line-height:1;cursor:pointer;border-radius:6px}
+.combo-x:focus-visible{outline:2px solid var(--accent)}
+.combo-list{position:absolute;z-index:5;left:0;right:0;top:calc(100% + 4px);margin:0;padding:4px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);max-height:280px;overflow-y:auto}
+.combo-list li{padding:9px 10px;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;min-width:0}
+.combo-list li span{min-width:0;word-break:break-word}
+.combo-list li small{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.combo-list li[aria-selected="true"],.combo-list li:hover{background:var(--accent-soft)}
+.combo-list li mark{background:none;color:var(--accent);font-weight:600}
+.combo-list .none{color:var(--muted);cursor:default}
+.combo-list .none:hover{background:none}
+.match.bad{color:var(--err)} .match.bad .dot{background:var(--err)}
+.match{font-size:.8rem;display:flex;align-items:center;gap:6px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.match.good .dot{background:var(--ok)} .match.weak{color:var(--warn)} .match.weak .dot{background:var(--warn)}
+
+.prio{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.prio input{position:absolute;opacity:0;pointer-events:none;width:1px}
+.prio label{display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:9px 0;cursor:pointer;font-weight:600;font-variant-numeric:tabular-nums;background:var(--bg)}
+.prio label::before{content:"";width:10px;height:10px;border-radius:2px;background:var(--pc)}
+.prio input:checked+label{border-color:var(--pc);box-shadow:inset 0 0 0 1px var(--pc);background:var(--surface)}
+.prio input:focus-visible+label{outline:2px solid var(--accent);outline-offset:1px}
+
+.preview{font-family:var(--f-mono);font-size:.9rem;background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:10px 12px;word-break:break-word;min-height:1.4em}
+.preview .meta{display:block;color:var(--muted);font-size:.78rem;margin-top:4px}
+.preview.empty{color:var(--muted)}
+
+.btn{font:inherit;font-family:var(--f-display);font-weight:700;font-size:1.05rem;letter-spacing:.02em;border:0;border-radius:8px;padding:13px 16px;cursor:pointer;background:var(--accent);color:var(--accent-fg);width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.linkbtn{font:inherit;font-size:.85rem;background:none;border:0;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+
+.msg{border-radius:8px;padding:10px 12px;font-size:.92rem}
+.msg.ok{background:var(--ok-soft);color:var(--ok)} .msg.warn{background:var(--warn-soft);color:var(--warn)} .msg.err{background:var(--err-soft);color:var(--err)}
+.msg.info{background:var(--accent-soft);color:var(--fg)}
+
+.recent{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.recent li{padding:9px 0;border-top:1px solid var(--line);display:flex;gap:10px;align-items:baseline;min-width:0}
+.recent li:first-child{border-top:0}
+.recent .pbar{width:4px;align-self:stretch;border-radius:2px;background:var(--pc);flex:none}
+.recent .t{flex:1;min-width:0;word-break:break-word}
+.recent .d{font-size:.8rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.empty-note{color:var(--muted);font-size:.9rem;margin:0}
+
+table.fmt{border-collapse:collapse;width:100%;font-size:.88rem}
+table.fmt td{padding:5px 0;border-top:1px solid var(--line);vertical-align:top}
+table.fmt td:first-child{font-family:var(--f-mono);font-size:.8rem;padding-right:10px;white-space:nowrap;color:var(--accent)}
+table.fmt tr:first-child td{border-top:0}
+details summary{cursor:pointer;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:.8rem;color:var(--muted)}
+details[open] summary{margin-bottom:10px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.iconbtn{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:.85rem;background:var(--surface);border:1px solid var(--line);color:var(--fg);border-radius:999px;padding:6px 12px;cursor:pointer;max-width:100%;min-width:0}
+.iconbtn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iconbtn svg{width:16px;height:16px;flex:none}
+.iconbtn:focus-visible{outline:2px solid var(--accent)}
+.mic{display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-family:var(--f-display);font-weight:700;font-size:1rem;width:100%;padding:12px;border-radius:8px;border:1.5px solid var(--accent);background:var(--accent-soft);color:var(--fg);cursor:pointer}
+.mic svg{width:20px;height:20px;color:var(--accent)}
+.mic.on{background:var(--accent);color:var(--accent-fg)}
+.mic.on svg{color:var(--accent-fg);animation:puls 1.2s ease-in-out infinite}
+@keyframes puls{50%{transform:scale(1.18)}}
+.mic:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.btn.small{width:auto;padding:10px 16px;font-size:.95rem}
+</style>
+</head>
+<body>
+
+<div class="stripe" aria-hidden="true"></div>
+<div class="wrap">
+  <header>
+    <h1>NBW Werftaken</h1>
+    <button id="gear" class="iconbtn" type="button" aria-expanded="false" aria-controls="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span id="who">Niet ingesteld</span></button>
+  </header>
+
+  <p class="proj" style="margin:-10px 0 0">Taken gaan naar <b>NORRÉ - PROJECTEN</b></p>
+  <div id="conn" class="msg info" hidden></div>
+
+  <section class="card" id="settings" hidden aria-labelledby="l-set">
+    <span class="lbl" id="l-set">Instellingen</span>
+    <div class="field">
+      <label class="lbl" for="token">Todoist API-token</label>
+      <input id="token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Plak hier je token">
+    </div>
+    <p class="hint">Je vindt je token in Todoist via Instellingen &gt; Integraties &gt; Ontwikkelaar. Het wordt alleen op dit toestel bewaard. Gebruik je eigen token, niet dat van een collega.</p>
+    <div class="row"><button id="save" class="btn small" type="button">Opslaan en testen</button><button id="logout" class="linkbtn" type="button">Token wissen op dit toestel</button></div>
+    <div id="setmsg" class="msg" hidden></div>
+  </section>
+
+  <section class="card" aria-labelledby="l-dictaat">
+    <label class="lbl" id="l-dictaat" for="dictaat">Dicteer of typ</label>
+    <textarea id="dictaat" placeholder="Taak in Beernem Akkerstraat, uitzetten slikkers voor Andreas op 9 november om 7 uur met P1, gevraagd door Brecht"></textarea>
+    <button id="mic" class="mic" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Inspreken</span></button>
+    <p class="hint">Werkt de knop niet, gebruik dan de microfoon van je toetsenbord (gsm) of spraakinvoer van je laptop (Windows: <code>Win</code>+<code>H</code>).</p>
+  </section>
+
+  <section class="card" aria-labelledby="l-check">
+    <span class="lbl" id="l-check">Nakijken</span>
+    <div class="fields">
+      <div class="field full">
+        <label class="lbl" for="werf">Werf (label)</label>
+        <div class="combo">
+          <input id="werf" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="werf-list" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Typ de werf of kies uit de lijst">
+          <button id="werf-clear" class="combo-x" type="button" aria-label="Werf wissen" hidden>×</button>
+          <ul id="werf-list" class="combo-list" role="listbox" hidden></ul>
+        </div>
+        <span id="matchinfo" class="match"><span class="dot"></span><span id="matchtxt">Nog geen werf herkend</span></span>
+      </div>
+      <div class="field full">
+        <label class="lbl" for="taak">Taak</label>
+        <input id="taak" type="text" autocomplete="off" placeholder="Uitzetten slikkers">
+      </div>
+      <div class="field full">
+        <label class="lbl" for="uitvoerder">Uitvoerder</label>
+        <div class="chips" id="chips" role="group" aria-label="Kies uitvoerder"></div>
+        <input id="uitvoerder" type="text" autocomplete="off" placeholder="Of typ een andere naam">
+      </div>
+      <div class="field full">
+        <label class="lbl" for="aanvrager">Gevraagd door</label>
+        <input id="aanvrager" type="text" autocomplete="off" placeholder="Brecht">
+      </div>
+      <div class="field">
+        <label class="lbl" for="datum">Datum</label>
+        <input id="datum" type="date">
+      </div>
+      <div class="field">
+        <label class="lbl" for="uur">Uur</label>
+        <input id="uur" type="time">
+      </div>
+      <div class="field full">
+        <span class="lbl" id="l-prio">Prioriteit</span>
+        <div class="prio" role="radiogroup" aria-labelledby="l-prio">
+          <input type="radio" name="prio" id="p1" value="1" checked><label for="p1" style="--pc:var(--p1)">P1</label>
+          <input type="radio" name="prio" id="p2" value="2"><label for="p2" style="--pc:var(--p2)">P2</label>
+          <input type="radio" name="prio" id="p3" value="3"><label for="p3" style="--pc:var(--p3)">P3</label>
+          <input type="radio" name="prio" id="p4" value="4"><label for="p4" style="--pc:var(--p4)">P4</label>
+        </div>
+      </div>
+    </div>
+    <div>
+      <span class="lbl">Komt in Todoist als</span>
+      <div id="preview" class="preview empty">Nog niets ingevuld</div>
+    </div>
+    <button id="add" class="btn" type="button" disabled>Toevoegen aan Todoist</button>
+    <div id="status" class="msg" hidden></div>
+  </section>
+
+  <section class="card" aria-labelledby="l-recent">
+    <span class="lbl" id="l-recent">Laatst toegevoegd op dit toestel</span>
+    <ul id="recent" class="recent"></ul>
+    <p id="recent-empty" class="empty-note">Nog geen taken toegevoegd. Wat je hier toevoegt, verschijnt in deze lijst.</p>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>Zo dicteer je</summary>
+      <table class="fmt">
+        <tr><td>Taak in …</td><td>Werf. Wordt gekoppeld aan het best passende bestaande label.</td></tr>
+        <tr><td>, …</td><td>Wat er moet gebeuren. Komt na het streepje in de titel.</td></tr>
+        <tr><td>voor X</td><td>Uitvoerder. Komt na de taak in de titel en kan je ook apart kiezen.</td></tr>
+        <tr><td>op 9 november</td><td>Ook: 9/11, morgen, overmorgen, vrijdag, volgende maandag.</td></tr>
+        <tr><td>om 7 uur</td><td>Ook: 7u30, 13:15, half 8.</td></tr>
+        <tr><td>met P1</td><td>P1 tot P4. Zonder vermelding: P1.</td></tr>
+        <tr><td>gevraagd door X</td><td>Komt tussen haakjes achteraan in de titel.</td></tr>
+      </table>
+      <p class="hint" style="margin-top:10px">Je ziet je eigen labels en de labels die al op gedeelde taken staan. Er worden nooit nieuwe labels aangemaakt. Is de werf twijfelachtig herkend, dan kleurt de aanduiding oranje. Typ dan zelf in het werfveld: de lijst toont meteen de bestaande labels die passen.</p>
+      <p class="hint" style="margin-top:6px"><button id="reload" class="linkbtn" type="button">Labels opnieuw ophalen</button></p>
+    </details>
+  </section>
+</div>
+
+<script>
+// Vaste lijst uitvoerders (pas hier aan)
+const UITVOERDERS=["Andreas","Tumur","Bart"];
+// ---- Parser: dictaat -> taakvelden (vaste regels + label-matching) ----
+const MAANDEN = {januari:1,jan:1,februari:2,feb:2,maart:3,mrt:3,april:4,apr:4,mei:5,juni:6,jun:6,juli:7,jul:7,augustus:8,aug:8,september:9,sep:9,sept:9,oktober:10,okt:10,november:11,nov:11,december:12,dec:12};
+const DAGEN = {zondag:0,maandag:1,dinsdag:2,woensdag:3,donderdag:4,vrijdag:5,zaterdag:6};
+
+function deaccent(s){ return s.normalize("NFD").replace(/[̀-ͯ]/g,""); }
+function labelKey(name){ return deaccent(name.replace(/^[A-Za-z]{1,5}_+/,"")).toLowerCase().replace(/[^a-z0-9]/g,""); }
+function werfNaam(label){ return label.replace(/^[A-Za-z]{1,5}_+/,"").trim(); }
+
+function lev(a,b){
+  const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  let prev=new Array(n+1), cur=new Array(n+1);
+  for(let j=0;j<=n;j++) prev[j]=j;
+  for(let i=1;i<=m;i++){ cur[0]=i;
+    for(let j=1;j<=n;j++){ cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); }
+    [prev,cur]=[cur,prev]; }
+  return prev[n];
+}
+function sim(a,b){ if(!a||!b) return 0; return 1-lev(a,b)/Math.max(a.length,b.length); }
+
+// Labels ontdubbelen op genormaliseerde naam; eerste (persoonlijk) wint.
+function prepLabels(names){
+  const seen=new Map();
+  for(const n of names){ const k=labelKey(n); if(k && !seen.has(k)) seen.set(k,n); }
+  return [...seen.entries()].map(([key,name])=>({key,name}));
+}
+
+function rankLabels(text, labels){
+  const k=labelKey(text);
+  return labels.map(l=>{
+    let sc=sim(k,l.key);
+    // gedeeltelijke werfnaam ("Koksijde Nachtegaalweg") mag ook, met lichte straf
+    if(k.length>=6 && k.length<l.key.length){
+      const pre=sim(k,l.key.slice(0,k.length))*(0.7+0.3*k.length/l.key.length);
+      if(pre>sc) sc=pre;
+    }
+    return {...l,score:sc};
+  }).sort((a,b)=>b.score-a.score);
+}
+
+function pad(n){ return String(n).padStart(2,"0"); }
+function iso(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+
+function parseDictaat(input, labels, today){
+  today = today || new Date();
+  const t0=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  let s=" "+input.replace(/\s+/g," ").trim().replace(/[.!]+$/,"")+" ";
+  const out={werfLabel:null,werfScore:0,kandidaten:[],taak:"",uitvoerder:"",aanvrager:"",datum:"",uur:"",prioriteit:1,ruw:input};
+
+  // 1. "Taak in" (ook spraakvarianten: tak, dak, taken, ...)
+  s=s.replace(/^\s*(?:taak|tak|dak|taken|tag|taart)\s+(?:in|bij|voor)\s+/i," ");
+
+  // 2. Prioriteit: "met P1", "B1", "prioriteit 2"
+  s=s.replace(/,?\s*(?:\bmet\s+(?:het\s+)?)?\b(?:p|b|prio(?:riteit)?)\s?([1-4])\b/i,(m,p)=>{out.prioriteit=+p;return " ";});
+
+  // 3. Aanvrager: "gevraagd door X"
+  s=s.replace(/,?\s*\bgevraagd\s+(?:door|op)\s+([A-Za-zÀ-ÿ'\-]+)/i,(m,n)=>{out.aanvrager=n.charAt(0).toUpperCase()+n.slice(1);return " ";});
+
+  // 4. Uur: "om 7 uur", "om 7u30", "om 13:15", "om half 8"
+  s=s.replace(/,?\s*\bom\s+half\s+(\d{1,2})\b(?:\s*uur)?/i,(m,h)=>{out.uur=pad((+h+23)%24)+":30";return " ";});
+  s=s.replace(/,?\s*\bom\s+(\d{1,2})\s*(?:(?:[:.]|u|h|uur)\s*(\d{2})?)?\s*(?:uur)?\b/i,(m,h,mi)=>{ if(+h<24){out.uur=pad(+h)+":"+(mi?pad(+mi):"00");} return " ";});
+
+  // 5. Datum
+  let d=null;
+  s=s.replace(/,?\s*(?:\bop\s+)?\b(\d{1,2})\s+([a-z]+)\.?(?:\s+(\d{4}))?\b/i,(m,dag,mnd,jaar)=>{
+    const mm=MAANDEN[deaccent(mnd).toLowerCase()]; if(!mm) return m;
+    let y=jaar?+jaar:t0.getFullYear(); let c=new Date(y,mm-1,+dag);
+    if(!jaar && c<t0) c=new Date(y+1,mm-1,+dag); d=c; return " ";});
+  if(!d) s=s.replace(/,?\s*(?:\bop\s+)?\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/,(m,dag,mnd,jaar)=>{
+    let y=jaar?(+jaar<100?2000+ +jaar:+jaar):t0.getFullYear(); let c=new Date(y,+mnd-1,+dag);
+    if(!jaar && c<t0) c=new Date(y+1,+mnd-1,+dag); d=c; return " ";});
+  if(!d) s=s.replace(/,?\s*(?:\bop\s+)?\b(vandaag|overmorgen|morgen)\b/i,(m,w)=>{
+    const add={vandaag:0,morgen:1,overmorgen:2}[w.toLowerCase()]; d=new Date(t0); d.setDate(d.getDate()+add); return " ";});
+  if(!d) s=s.replace(/,?\s*(?:\bop\s+)?\b(?:(volgende|komende)\s+)?(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\b/i,(m,v,dag)=>{
+    const target=DAGEN[dag.toLowerCase()]; let diff=(target-t0.getDay()+7)%7; if(diff===0) diff=7;
+    d=new Date(t0); d.setDate(d.getDate()+diff); return " ";});
+  if(d) out.datum=iso(d);
+  // losse "op" die overblijft aan het einde
+  s=s.replace(/\s+op\s*$/i," ");
+
+  // 6. Werf = beginwoorden die het best op een bestaand label passen
+  const words=s.replace(/[,.;:]/g," , ").split(/\s+/).filter(Boolean);
+  const plain=words.filter(w=>w!==",");
+  let werfLen=0;
+  if(labels && labels.length && plain.length){
+    let best={score:-1,k:0};
+    for(let k=1;k<=Math.min(8,plain.length);k++){
+      const cand=plain.slice(0,k).join(" ");
+      const top=rankLabels(cand,labels)[0];
+      if(top && top.score>best.score+0.001){ best={score:top.score,k,label:top.name}; }
+    }
+    werfLen=best.k; out.werfLabel=best.label; out.werfScore=best.score;
+    out.kandidaten=rankLabels(plain.slice(0,werfLen).join(" "),labels);
+  } else {
+    // zonder labels: tot de eerste komma, anders tot "voor"
+    const ci=words.indexOf(","); const vi=plain.findIndex(w=>w.toLowerCase()==="voor");
+    werfLen = ci>0 ? words.slice(0,ci).length : (vi>0?vi:plain.length);
+  }
+  let rest=plain.slice(werfLen).join(" ").trim();
+  rest=rest.replace(/^voor\s+/i,"");              // "Taak in X voor ..."
+  // Uitvoerder: "... voor Andreas" / "... door Andreas", of een bekende naam als laatste woord
+  const m=rest.match(/^(.*?)\s*\b(?:voor|door)\s+([A-Za-zÀ-ÿ'\-]+)\s*$/i);
+  if(m){ out.uitvoerder=matchPersoon(m[2],0.6)||cap(m[2]); rest=m[1]; }
+  else {
+    const lw=rest.match(/^(.*?)\s*([A-Za-zÀ-ÿ'\-]+)\s*$/);
+    const p=lw&&matchPersoon(lw[2],0.75);
+    if(p){ out.uitvoerder=p; rest=lw[1]; }
+  }
+  rest=rest.replace(/\s+/g," ").trim();
+  out.taak=rest? cap(rest):"";
+  return out;
+}
+
+function cap(s){ return s? s.charAt(0).toUpperCase()+s.slice(1):""; }
+function matchPersoon(woord,drempel){
+  const w=deaccent(woord).toLowerCase(); let best=null,bs=0;
+  for(const n of UITVOERDERS){ const sc=sim(w,deaccent(n).toLowerCase()); if(sc>bs){bs=sc;best=n;} }
+  return bs>=drempel?best:null;
+}
+
+function maakTitel(werf,taak,uitvoerder,aanvrager){
+  let t=(werf||"").trim();
+  const mid=[taak,uitvoerder].map(x=>(x||"").trim()).filter(Boolean).join(" ");
+  if(mid) t+= (t?" - ":"")+mid;
+  if(aanvrager) t+=" ("+aanvrager.trim()+")";
+  return t;
+}
+
+const NL_MND=["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
+function dueString(datum,uur){
+  if(!datum) return "";
+  const [y,m,d]=datum.split("-").map(Number);
+  return d+" "+NL_MND[m-1]+" "+y+(uur?" om "+uur:"");
+}
+
+
+</script>
+<script>
+const PROJECT_ID="6QmW4xcvphPVFG8r";
+const $=id=>document.getElementById(id);
+let LABELS=[], busy=false, lastParse=null;
+
+function setConn(kind,text){ const c=$("conn"); if(!kind){c.hidden=true;return;} c.hidden=false; c.className="msg "+kind; c.textContent=text; }
+function setStatus(kind,text){ const s=$("status"); if(!kind){s.hidden=true;return;} s.hidden=false; s.className="msg "+kind; s.textContent=text; }
+
+const API="https://api.todoist.com/api/v1/";
+const TKEY="nbw-werftaken-token", LKEY="nbw-werftaken-labels", WKEY="nbw-werftaken-who";
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ if(v==null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} }
+function getToken(){ return (lsGet(TKEY)||"").trim(); }
+
+class ApiError extends Error{ constructor(kind,status,detail){ super(detail||kind); this.kind=kind; this.status=status; this.detail=detail||""; } }
+async function api(path,opt){
+  opt=opt||{}; const tok=opt.token||getToken();
+  if(!tok) throw new ApiError("notoken",0);
+  let url=API+path;
+  if(opt.query){ const q=new URLSearchParams(); Object.entries(opt.query).forEach(([k,v])=>{ if(v!=null&&v!=="") q.set(k,v); }); const qs=q.toString(); if(qs) url+="?"+qs; }
+  const headers={"Authorization":"Bearer "+tok};
+  if(opt.body) headers["Content-Type"]="application/json";
+  if(opt.requestId) headers["X-Request-Id"]=opt.requestId;
+  let r;
+  try{ r=await fetch(url,{method:opt.method||"GET",headers,body:opt.body?JSON.stringify(opt.body):undefined}); }
+  catch(e){ throw new ApiError(navigator.onLine===false?"offline":"network",0,String(e)); }
+  const txt=await r.text().catch(()=> "");
+  if(r.status===401) throw new ApiError("auth",401,txt);
+  if(r.status===403||r.status===404) throw new ApiError("noaccess",r.status,txt);
+  if(r.status===429) throw new ApiError("rate",429,txt);
+  if(r.status>=500) throw new ApiError("server",r.status,txt);
+  if(!r.ok) throw new ApiError("bad",r.status,txt);
+  try{ return txt?JSON.parse(txt):null; }catch(e){ return null; }
+}
+function errText(e,actie){
+  const k=e&&e.kind;
+  switch(k){
+    case "notoken": return "Vul eerst je Todoist-token in bij Instellingen (knop rechtsboven).";
+    case "auth": return "Todoist aanvaardt je token niet. Kijk het na bij Instellingen.";
+    case "noaccess": return actie==="de taak"||actie==="het project"
+      ? "Je hebt geen toegang tot NORRÉ - PROJECTEN. Vraag Bart om het project in Todoist met je te delen."
+      : "Todoist weigert de toegang ("+e.status+").";
+    case "offline": return "Je bent offline. Probeer opnieuw als je weer verbinding hebt.";
+    case "rate": return "Te veel aanvragen na elkaar. Wacht een minuut en probeer opnieuw.";
+    case "network": case "server":
+      return actie==="de taak"
+        ? "Geen duidelijk antwoord van Todoist. De taak kan toch zijn toegevoegd: kijk eerst in Todoist voor je opnieuw drukt."
+        : "Todoist antwoordt even niet. Probeer zo dadelijk opnieuw.";
+    case "bad": { let m=""; try{ const j=JSON.parse(e.detail); m=j.error||j.message||""; }catch(x){ m=e.detail; }
+      return "Todoist weigerde "+actie+(m?": "+String(m).slice(0,160):"."); }
+    default: return "Er ging iets mis bij "+actie+".";
+  }
+}
+
+async function fetchAll(path,map){
+  const out=[]; let cursor=null;
+  for(let i=0;i<20;i++){
+    const r=await api(path,{query:{limit:200,cursor}}); const p=r||{};
+    (p.results||[]).forEach(x=>{ const n=map(x); if(n) out.push(n); });
+    if(p.next_cursor){ cursor=p.next_cursor; } else break;
+  }
+  return out;
+}
+function useLabels(names){ LABELS=prepLabels(names); if($("dictaat").value.trim()) reparse(); else setMatch(null); updatePreview(); }
+async function loadLabels(){
+  if(!getToken()) return;
+  setConn("info","Labels ophalen uit Todoist…");
+  try{
+    const own=await fetchAll("labels",l=>l&&l.name);
+    let shared=[]; try{ shared=await fetchAll("labels/shared",l=>typeof l==="string"?l:(l&&l.name)); }catch(e){}
+    const names=[...own,...shared];
+    lsSet(LKEY,JSON.stringify({t:Date.now(),names}));
+    setConn(null); useLabels(names);
+  }catch(e){
+    if(LABELS.length){ setConn("warn","Labels niet vernieuwd: "+errText(e,"het ophalen van de labels")+" Je werkt met de bewaarde lijst."); }
+    else setConn(e.kind==="network"||e.kind==="server"||e.kind==="offline"?"warn":"err", errText(e,"het ophalen van de labels"));
+  }
+}
+async function checkAccount(){
+  try{
+    const u=await api("user");
+    const naam=(u&&(u.full_name||u.email))||""; lsSet(WKEY,naam); showWho(naam);
+    await api("projects/"+PROJECT_ID);
+    return true;
+  }catch(e){ setConn("err",errText(e,e.kind==="noaccess"?"het project":"het aanmelden")); if(e.kind==="auth"||e.kind==="notoken") openSettings(true); return false; }
+}
+function showWho(n){ $("who").textContent= n? n : "Niet ingesteld"; }
+
+// ---- Werf-combobox: zelf typen of kiezen, enkel bestaande labels ----
+let selLabel="", comboItems=[], comboIdx=-1;
+const wIn=$("werf"), wList=$("werf-list"), wClear=$("werf-clear");
+
+function exactLabel(txt){
+  const k=labelKey(txt); if(!k) return "";
+  const hit=LABELS.find(l=>l.key===k); return hit?hit.name:"";
+}
+function suggest(txt){
+  const k=labelKey(txt||"");
+  if(!k) return [...LABELS].sort((a,b)=>a.name.localeCompare(b.name,"nl")).slice(0,50).map(l=>({...l,score:null}));
+  // eerst labels die de getypte tekst letterlijk bevatten, daarna de beste gelijkenissen
+  const contains=LABELS.filter(l=>l.key.includes(k)).map(l=>({...l,score:1,_c:l.key.indexOf(k)})).sort((a,b)=>a._c-b._c||a.name.localeCompare(b.name,"nl"));
+  const rest=rankLabels(txt,LABELS).filter(l=>!l.key.includes(k)&&l.score>=0.35);
+  return [...contains,...rest].slice(0,10);
+}
+function highlight(name,txt){
+  const frag=document.createDocumentFragment();
+  const words=(txt||"").trim().split(/\s+/).filter(w=>w.length>1).map(w=>deaccent(w).toLowerCase());
+  const plain=deaccent(name).toLowerCase(); let marks=new Array(name.length).fill(false);
+  words.forEach(w=>{ let i=plain.indexOf(w); while(i>=0){ for(let j=i;j<i+w.length;j++) marks[j]=true; i=plain.indexOf(w,i+w.length);} });
+  let buf="",m=false;
+  const flush=()=>{ if(!buf) return; if(m){const e=document.createElement("mark");e.textContent=buf;frag.appendChild(e);} else frag.appendChild(document.createTextNode(buf)); buf=""; };
+  for(let i=0;i<name.length;i++){ if(marks[i]!==m){flush();m=marks[i];} buf+=name[i]; } flush();
+  return frag;
+}
+function openList(items){
+  comboItems=items; comboIdx=-1; wList.innerHTML="";
+  if(!LABELS.length){ const li=document.createElement("li"); li.className="none"; li.textContent="Labels nog niet geladen"; wList.appendChild(li); }
+  else if(!items.length){ const li=document.createElement("li"); li.className="none"; li.textContent="Geen bestaand label gevonden. Typ anders of korter."; wList.appendChild(li); }
+  items.forEach((l,i)=>{
+    const li=document.createElement("li"); li.id="werf-opt-"+i; li.setAttribute("role","option"); li.setAttribute("aria-selected","false");
+    const s=document.createElement("span"); s.appendChild(highlight(l.name,wIn.value)); li.appendChild(s);
+    if(l.score!=null && l.score<1){ const sm=document.createElement("small"); sm.textContent=Math.round(l.score*100)+"%"; li.appendChild(sm); }
+    li.addEventListener("pointerdown",ev=>{ ev.preventDefault(); chooseLabel(l.name,1); });
+    wList.appendChild(li);
+  });
+  wList.hidden=false; wIn.setAttribute("aria-expanded","true");
+}
+function closeList(){ wList.hidden=true; wIn.setAttribute("aria-expanded","false"); wIn.removeAttribute("aria-activedescendant"); comboIdx=-1; }
+function moveIdx(d){
+  if(!comboItems.length) return;
+  comboIdx=(comboIdx+d+comboItems.length)%comboItems.length;
+  [...wList.querySelectorAll("li[role=option]")].forEach((li,i)=>li.setAttribute("aria-selected",i===comboIdx?"true":"false"));
+  const cur=$("werf-opt-"+comboIdx); if(cur){ cur.scrollIntoView({block:"nearest"}); wIn.setAttribute("aria-activedescendant",cur.id); }
+}
+function chooseLabel(name,score){
+  selLabel=name||""; wIn.value=selLabel; wClear.hidden=!wIn.value; closeList();
+  setMatch(selLabel||null,score); updatePreview();
+}
+
+wIn.addEventListener("focus",()=>{ openList(lastParse&&lastParse.kandidaten&&wIn.value===selLabel&&selLabel ? lastParse.kandidaten.slice(0,10) : suggest(wIn.value)); });
+wIn.addEventListener("input",()=>{
+  wClear.hidden=!wIn.value;
+  selLabel=exactLabel(wIn.value);
+  setMatch(selLabel||null, selLabel?1:0, !!wIn.value.trim());
+  openList(suggest(wIn.value)); updatePreview();
+});
+wIn.addEventListener("keydown",e=>{
+  if(e.key==="ArrowDown"){ e.preventDefault(); if(wList.hidden) openList(suggest(wIn.value)); moveIdx(1); }
+  else if(e.key==="ArrowUp"){ e.preventDefault(); moveIdx(-1); }
+  else if(e.key==="Enter"){ if(!wList.hidden){ e.preventDefault(); const it=comboItems[comboIdx>=0?comboIdx:0]; if(it) chooseLabel(it.name,1); } }
+  else if(e.key==="Escape"){ closeList(); }
+});
+wIn.addEventListener("blur",()=>{ setTimeout(closeList,120); });
+wClear.addEventListener("click",()=>{ chooseLabel("",0); wIn.focus(); });
+
+function setMatch(label,score,typed){
+  const m=$("matchinfo"), t=$("matchtxt");
+  m.className="match";
+  if(!label){
+    if(typed){ m.classList.add("bad"); t.textContent="Geen bestaand label. Kies er een uit de lijst."; }
+    else t.textContent= LABELS.length?"Nog geen werf gekozen":"Labels nog niet geladen";
+    return; }
+  if(score>=0.8){ m.classList.add("good"); t.textContent= score>=1?"Bestaand label":"Herkend ("+Math.round(score*100)+"%)"; }
+  else { m.classList.add("weak"); t.textContent="Twijfelachtig ("+Math.round(score*100)+"%). Kijk het label na."; }
+}
+
+function reparse(){
+  const txt=$("dictaat").value.trim();
+  if(!txt){ lastParse=null; updatePreview(); return; }
+  const r=parseDictaat(txt,LABELS);
+  lastParse=r;
+  selLabel=r.werfLabel||""; wIn.value=selLabel; wClear.hidden=!selLabel;
+  setMatch(r.werfLabel,r.werfScore);
+  $("taak").value=r.taak; $("uitvoerder").value=r.uitvoerder; syncChips(); $("aanvrager").value=r.aanvrager;
+  $("datum").value=r.datum; $("uur").value=r.uur;
+  $("p"+r.prioriteit).checked=true;
+  setStatus(null);
+  updatePreview();
+}
+
+function prio(){ const c=document.querySelector('input[name=prio]:checked'); return c?+c.value:1; }
+function fmtDatum(d,u){ if(!d) return "geen datum"; const [y,m,dd]=d.split("-"); return +dd+"/"+(+m)+"/"+y+(u?" "+u:""); }
+
+function updatePreview(){
+  const label=selLabel, taak=$("taak").value.trim(), aanv=$("aanvrager").value.trim(), uitv=$("uitvoerder").value.trim();
+  const titel=maakTitel(label?werfNaam(label):"",taak,uitv,aanv);
+  const pv=$("preview");
+  if(!titel){ pv.className="preview empty"; pv.textContent="Nog niets ingevuld"; }
+  else{
+    pv.className="preview"; pv.textContent=titel;
+    const meta=document.createElement("span"); meta.className="meta";
+    meta.textContent=(label||"geen label")+"  ·  "+fmtDatum($("datum").value,$("uur").value)+"  ·  P"+prio();
+    pv.appendChild(meta);
+  }
+  $("add").disabled = busy || !getToken() || !label || !taak;
+}
+
+let deb=null;
+$("dictaat").addEventListener("input",()=>{ clearTimeout(deb); deb=setTimeout(reparse,250); });
+["taak","aanvrager","datum","uur"].forEach(id=>$(id).addEventListener("input",updatePreview));
+// Uitvoerder: vaste namen als knoppen, of zelf typen
+function syncChips(){ const v=$("uitvoerder").value.trim().toLowerCase();
+  document.querySelectorAll("#chips .chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.naam.toLowerCase()===v?"true":"false")); }
+UITVOERDERS.forEach(n=>{ const b=document.createElement("button"); b.type="button"; b.className="chip"; b.dataset.naam=n; b.textContent=n; b.setAttribute("aria-pressed","false");
+  b.addEventListener("click",()=>{ const u=$("uitvoerder"); u.value = u.value.trim().toLowerCase()===n.toLowerCase() ? "" : n; syncChips(); updatePreview(); });
+  $("chips").appendChild(b); });
+$("uitvoerder").addEventListener("input",()=>{ syncChips(); updatePreview(); });
+document.querySelectorAll('input[name=prio]').forEach(r=>r.addEventListener("change",updatePreview));
+$("reload").addEventListener("click",()=>loadLabels());
+
+$("add").addEventListener("click",async()=>{
+  if(busy||!getToken()) return;
+  const label=selLabel, taak=$("taak").value.trim(), aanv=$("aanvrager").value.trim(), uitv=$("uitvoerder").value.trim();
+  if(!label || !LABELS.some(l=>l.name===label)){ setStatus("err","Kies eerst een bestaand label."); return; }
+  const titel=maakTitel(werfNaam(label),taak,uitv,aanv);
+  const body={content:titel,priority:5-prio(),labels:[label],project_id:PROJECT_ID};
+  const due=dueString($("datum").value,$("uur").value); if(due){ body.due_string=due; body.due_lang="nl"; }
+  const rid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2));
+  busy=true; updatePreview(); $("add").textContent="Bezig met toevoegen…"; setStatus(null);
+  try{
+    const t=await api("tasks",{method:"POST",body,requestId:rid})||{};
+    setStatus("ok","Toegevoegd: "+(t.content||titel));
+    pushRecent({titel:t.content||titel,p:prio(),datum:fmtDatum($("datum").value,$("uur").value)});
+    $("dictaat").value=""; ["taak","uitvoerder","aanvrager","datum","uur"].forEach(id=>$(id).value=""); syncChips();
+    $("p1").checked=true; selLabel=""; wIn.value=""; wClear.hidden=true; lastParse=null; setMatch(null);
+  }catch(e){ setStatus(e.kind==="network"||e.kind==="server"?"warn":"err", errText(e,"de taak")); }
+  finally{ busy=false; $("add").textContent="Toevoegen aan Todoist"; updatePreview(); }
+});
+
+// ---- Inspreken met de spraakherkenning van de browser ----
+(function(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition; const btn=$("mic");
+  if(!SR){ btn.hidden=true; return; }
+  let rec=null, base="", luistert=false;
+  function stop(){ luistert=false; btn.classList.remove("on"); btn.querySelector("span").textContent="Inspreken"; }
+  btn.addEventListener("click",()=>{
+    if(luistert&&rec){ rec.stop(); return; }
+    rec=new SR(); rec.lang="nl-BE"; rec.interimResults=true; rec.continuous=false; rec.maxAlternatives=1;
+    base=$("dictaat").value.trim(); luistert=true; btn.classList.add("on"); btn.querySelector("span").textContent="Luistert… tik om te stoppen";
+    rec.onresult=ev=>{ let txt=""; for(let i=0;i<ev.results.length;i++) txt+=ev.results[i][0].transcript;
+      $("dictaat").value=(base?base+" ":"")+txt.trim(); clearTimeout(deb); deb=setTimeout(reparse,200); };
+    rec.onerror=ev=>{ stop(); if(ev.error==="not-allowed"||ev.error==="service-not-allowed") setStatus("err","Geen toegang tot de microfoon. Sta de microfoon toe voor deze site in je browser, of gebruik de microfoon van je toetsenbord.");
+      else if(ev.error!=="aborted"&&ev.error!=="no-speech") setStatus("warn","Inspreken lukte niet ("+ev.error+"). Probeer opnieuw of gebruik de microfoon van je toetsenbord."); };
+    rec.onend=()=>{ stop(); reparse(); };
+    try{ rec.start(); }catch(e){ stop(); }
+  });
+})();
+
+// ---- Instellingen ----
+function openSettings(show){ $("settings").hidden=!show; $("gear").setAttribute("aria-expanded",show?"true":"false"); if(show){ $("token").value=getToken(); } }
+$("gear").addEventListener("click",()=>openSettings($("settings").hidden));
+$("save").addEventListener("click",async()=>{
+  const tok=$("token").value.trim(); const m=$("setmsg");
+  if(!tok){ m.hidden=false; m.className="msg err"; m.textContent="Plak eerst je token."; return; }
+  m.hidden=false; m.className="msg info"; m.textContent="Token testen…";
+  try{
+    const u=await api("user",{token:tok});
+    lsSet(TKEY,tok); const naam=(u&&(u.full_name||u.email))||""; lsSet(WKEY,naam); showWho(naam);
+    try{ await api("projects/"+PROJECT_ID); m.className="msg ok"; m.textContent="In orde. Aangemeld als "+(naam||"onbekend")+"."; setConn(null); setTimeout(()=>openSettings(false),1200); }
+    catch(e){ m.className="msg warn"; m.textContent="Token werkt, maar: "+errText(e,"het project"); }
+    loadLabels(); updatePreview();
+  }catch(e){ m.className="msg err"; m.textContent=e.kind==="auth"?"Dit token wordt niet aanvaard door Todoist. Kopieer het opnieuw.":errText(e,"het testen van het token"); }
+});
+$("logout").addEventListener("click",()=>{ lsSet(TKEY,null); lsSet(WKEY,null); lsSet(LKEY,null); LABELS=[]; $("token").value=""; showWho(""); setMatch(null); updatePreview();
+  const m=$("setmsg"); m.hidden=false; m.className="msg info"; m.textContent="Token gewist op dit toestel."; });
+
+// Recente taken: enkel op dit toestel
+const RKEY="nbw-werftaken-recent";
+function getRecent(){ try{ return JSON.parse(localStorage.getItem(RKEY)||"[]"); }catch(e){ return []; } }
+function pushRecent(item){ const l=[item,...getRecent()].slice(0,8); try{ localStorage.setItem(RKEY,JSON.stringify(l)); }catch(e){} renderRecent(l); }
+function renderRecent(l){
+  l=l||getRecent(); const ul=$("recent"); ul.innerHTML="";
+  $("recent-empty").hidden=l.length>0;
+  l.forEach(it=>{ const li=document.createElement("li");
+    const b=document.createElement("span"); b.className="pbar"; b.style.setProperty("--pc","var(--p"+it.p+")");
+    const t=document.createElement("span"); t.className="t"; t.textContent=it.titel;
+    const d=document.createElement("span"); d.className="d"; d.textContent=it.datum;
+    li.append(b,t,d); ul.appendChild(li); });
+}
+renderRecent();
+showWho(lsGet(WKEY)||"");
+(function(){ try{ const c=JSON.parse(lsGet(LKEY)||"null"); if(c&&c.names) useLabels(c.names); }catch(e){} })();
+updatePreview();
+if(!getToken()){ setConn("info","Welkom. Vul eenmalig je Todoist-token in om te starten."); openSettings(true); }
+else { setConn(null); checkAccount().then(ok=>{ if(ok) loadLabels(); }); }
+if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+</script>
+</body>
+</html>
