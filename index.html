@@ -649,7 +649,9 @@ function updatePreview(){
   else{
     pv.className="preview"; pv.textContent=titel;
     const meta=document.createElement("span"); meta.className="meta";
-    meta.textContent=(label||"geen label")+"  ·  "+fmtDatum($("datum").value,$("uur").value)+"  ·  P"+prio();
+    const uitv=$("uitvoerder").value.trim(), lid=zoekLid(uitv);
+    const toew= !uitv ? "" : lid ? "  ·  verantwoordelijke: "+lid.naam.split(" ")[0] : (COLLAB ? "  ·  "+uitv+" is geen projectlid, niet toegewezen" : "");
+    meta.textContent=(label||"geen label")+"  ·  "+fmtDatum($("datum").value,$("uur").value)+"  ·  P"+prio()+toew;
     pv.appendChild(meta);
   }
   $("add").disabled = busy || !getToken() || !label || !taak;
@@ -674,6 +676,7 @@ $("add").addEventListener("click",async()=>{
   if(!label || (!selNew && !LABELS.some(l=>l.name===label))){ setStatus("err","Kies eerst een werf: een bestaand label of een nieuwe werf."); return; }
   const titel=maakTitel(werfNaam(label),taak,uitv,aanv);
   const body={content:titel,priority:5-prio(),labels:[label],project_id:PROJECT_ID};
+  if(uitv){ try{ await laadCollab(); }catch(e){} const lid=zoekLid(uitv); if(lid) body.assignee_id=lid.id; }
   const due=dueString($("datum").value,$("uur").value); if(due){ body.due_string=due; body.due_lang="nl"; }
   busy=true; updatePreview(); $("add").textContent="Bezig met toevoegen…"; setStatus(null);
   try{
@@ -684,7 +687,7 @@ $("add").addEventListener("click",async()=>{
       lsSet(LKEY,JSON.stringify({t:Date.now(),names})); selNew=false;
     }
     const t=await api("tasks",{method:"POST",body})||{};
-    setStatus("ok","Toegevoegd: "+(t.content||titel));
+    setStatus("ok","Toegevoegd: "+(t.content||titel)+(body.assignee_id&&COLLAB_FULL[body.assignee_id]?" · verantwoordelijke: "+COLLAB_FULL[body.assignee_id]:""));
     pushRecent({titel:t.content||titel,p:prio(),datum:fmtDatum($("datum").value,$("uur").value),door:(lsGet(WKEY)||"").split(" ")[0],toegevoegd:fmtStamp(new Date().toISOString())});
     setTimeout(loadRecent,1500);
     $("dictaat").value=""; ["taak","uitvoerder","aanvrager","uur"].forEach(id=>$(id).value=""); setDatum(""); syncChips();
@@ -801,6 +804,26 @@ $("kal-wis").addEventListener("click",()=>setDatum(""));
 $("kal-vandaag").addEventListener("click",()=>{ const t=new Date(); kalJaar=t.getFullYear(); kalMaand=t.getMonth(); setDatum(isoDag(t)); tekenKal(); });
 $("kal-klaar").addEventListener("click",()=>{ openKal(false); $("datumknop").focus(); });
 
+// Projectleden: voor "toegevoegd door" en om de uitvoerder als verantwoordelijke toe te wijzen
+let COLLAB_FULL={};
+async function laadCollab(){
+  if(COLLAB) return COLLAB;
+  const m={}, full={};
+  try{ const c=await fetchAll("projects/"+PROJECT_ID+"/collaborators",x=>x);
+    c.forEach(x=>{ if(x&&x.id){ const n=(x.name||x.email||""); m[x.id]=n.split(" ")[0]; full[x.id]=n; } }); }
+  catch(e){ return m; } // niet bewaren bij een fout, volgende keer opnieuw proberen
+  const uid=lsGet(UKEY), naam=lsGet(WKEY); if(uid&&naam&&!m[uid]){ m[uid]=naam.split(" ")[0]; full[uid]=naam; }
+  COLLAB=m; COLLAB_FULL=full; updatePreview(); return m;
+}
+function zoekLid(naam){
+  const n=deaccent((naam||"").trim()).toLowerCase(); if(!n||!COLLAB) return null;
+  for(const [id,f] of Object.entries(COLLAB_FULL)){
+    const fl=deaccent(f).toLowerCase();
+    if(fl===n || fl.split(" ")[0]===n || fl.startsWith(n+" ")) return {id,naam:f};
+  }
+  return null;
+}
+
 // Recente taken: open taken uit NORRÉ - PROJECTEN, van alle toestellen en collega's
 const RKEY="nbw-werftaken-recent2", UKEY="nbw-werftaken-uid";
 let COLLAB=null, recentBusy=false, recentAt=0;
@@ -842,11 +865,7 @@ async function loadRecent(){
       if(r.next_cursor) cursor=r.next_cursor; else break;
     }
     bouwDueMap(tasks);
-    if(!COLLAB){
-      COLLAB={};
-      try{ const c=await fetchAll("projects/"+PROJECT_ID+"/collaborators",x=>x); c.forEach(x=>{ if(x&&x.id) COLLAB[x.id]=(x.name||x.email||"").split(" ")[0]; }); }catch(e){}
-      const uid=lsGet(UKEY), naam=lsGet(WKEY); if(uid&&naam&&!COLLAB[uid]) COLLAB[uid]=naam.split(" ")[0];
-    }
+    await laadCollab();
     const list=tasks.filter(t=>t&&t.added_at&&!t.parent_id)
       .sort((a,b)=>Date.parse(b.added_at)-Date.parse(a.added_at)).slice(0,10)
       .map(t=>({titel:t.content,p:Math.min(4,Math.max(1,5-(t.priority||1))),datum:fmtDue(t.due),door:COLLAB[t.added_by_uid]||"",toegevoegd:fmtStamp(t.added_at)}));
